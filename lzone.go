@@ -85,9 +85,8 @@ func (lz *LZoned) Fetch(zone int) {
 	if lz.GetState(zone) == LZEmpty {
 		zoneOps := lz.LZArena.ops[zone]
 		zoneOps.Fetch(lz.LZObj)
+		lz.SetClean(zone)
 	}
-
-	lz.SetDirty(zone)
 }
 
 func (lz *LZoned) GetTags(zone int) []string {
