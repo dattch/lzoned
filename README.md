@@ -96,16 +96,6 @@ func (u *User) SetName(name string) string {
 ### Step 4 
 Now your ready to call `u.lz.Flush()` when you're ready to save all dirty changes.
 
-
-```go
-func NewUser() *User {
-  u := &User{}
-  u.lz.Init(UserArena, u)
-  
-  return u
-}
-```
-
 ## Communication
 > ♥ This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
