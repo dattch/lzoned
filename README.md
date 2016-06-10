@@ -45,7 +45,7 @@ var UserSQLZone = UserArena.AddZone(LZops{
     u := obj.(*User)
     SqlQueryToGetNameAndAge(u)
   },
-  Flush: func (obj {}interface, tags []string) {
+  Flush: func (obj {}interface, tags []string) error {
 	u := obj.(*User)
 
   StartSQLTransaction()
@@ -58,6 +58,10 @@ var UserSQLZone = UserArena.AddZone(LZops{
        UpdateAgeViaSQL(u)
    }
   }
+
+  // If commit fails, it will return an error
+  err := CommitSQLTransaction()
+  return err
 })
 
 var UserRedisZone = UserArena.AddZone(LZops{
@@ -104,7 +108,7 @@ func (u *User) SetName(name string) string {
 ```
 
 ### Step 4 
-Now your ready to call `u.lz.Flush()` when you're ready to save all dirty changes.
+Now your ready to call `err := u.lz.Flush()` when you're ready to save all dirty changes. If any of the zones fails to flush (zone flush ops returns error), then this will return the first error and not complete the flush.
 
 ## Communication
 > ♥ This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.

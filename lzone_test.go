@@ -1,6 +1,7 @@
 package lzoned
 
 import (
+	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -23,18 +24,25 @@ func TestLZone(t *testing.T) {
 		var fetchedObject interface{}
 		var flushedObject interface{}
 		var flushedTags []string
+		var shouldError = false
 		// Add zones to our arena
 		zoneA := arena.AddZone(LZOps{
 			Fetch: func(obj interface{}) {
 				fetched = true
 				fetchedObject = obj
 			},
-			Flush: func(obj interface{}, tags []string) {
+			Flush: func(obj interface{}, tags []string) error {
 				flushed = true
 				flushedObject = obj
 				for _, tag := range tags {
 					flushedTags = append(flushedTags, tag)
 				}
+
+				if shouldError {
+					return fmt.Errorf("holah")
+				}
+
+				return nil
 			},
 		})
 
@@ -78,14 +86,18 @@ func TestLZone(t *testing.T) {
 		// Does flush if dirty and can set keys
 		foo.LZ.SetDirty(zoneA, "a")
 		foo.LZ.SetDirty(zoneA, "b")
-		foo.LZ.Flush()
+		err := foo.LZ.Flush()
 		So(flushed, ShouldEqual, true)
 		So(flushedObject.(Foo).x, ShouldEqual, foo.x)
 		So(len(flushedTags), ShouldEqual, 2)
+		So(err, ShouldEqual, nil)
 
+		// Test zone tag clear & errors
 		foo.LZ.SetDirty(zoneA)
 		flushedTags = []string{}
-		foo.LZ.Flush()
+		shouldError = true
+		err = foo.LZ.Flush()
 		So(len(flushedTags), ShouldEqual, 0)
+		So(err, ShouldNotEqual, nil)
 	})
 }
