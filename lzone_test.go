@@ -70,6 +70,11 @@ func TestLZone(t *testing.T) {
 		foo.LZ.Flush()
 		So(flushed, ShouldEqual, false)
 
+		// Stays empty if flushed
+		foo.LZ.LZStates[zoneA].state = 0
+		foo.LZ.Flush()
+		So(foo.LZ.GetState(zoneA), ShouldEqual, 0)
+
 		// Does flush if dirty and can set keys
 		foo.LZ.SetDirty(zoneA, "a")
 		foo.LZ.SetDirty(zoneA, "b")

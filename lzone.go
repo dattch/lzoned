@@ -105,9 +105,8 @@ func (lz *LZoned) _flush(zone int) {
 	if lz.GetState(zone) == LZDirty {
 		zoneOps := lz.LZArena.ops[zone]
 		zoneOps.Flush(lz.LZObj, lz.GetTags(zone))
+		lz.SetClean(zone)
 	}
-
-	lz.SetClean(zone)
 }
 
 func (lz *LZoned) Flush() {
