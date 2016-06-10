@@ -22,15 +22,19 @@ func TestLZone(t *testing.T) {
 		var flushed bool
 		var fetchedObject interface{}
 		var flushedObject interface{}
+		var flushedTags []string
 		// Add zones to our arena
 		zoneA := arena.AddZone(LZOps{
 			Fetch: func(obj interface{}) {
 				fetched = true
 				fetchedObject = obj
 			},
-			Flush: func(obj interface{}) {
+			Flush: func(obj interface{}, tags []string) {
 				flushed = true
 				flushedObject = obj
+				for _, tag := range tags {
+					flushedTags = append(flushedTags, tag)
+				}
 			},
 		})
 
@@ -66,10 +70,17 @@ func TestLZone(t *testing.T) {
 		foo.LZ.Flush()
 		So(flushed, ShouldEqual, false)
 
-		// Does flush if dirty
-		foo.LZ.SetDirty(zoneA)
+		// Does flush if dirty and can set keys
+		foo.LZ.SetDirty(zoneA, "a")
+		foo.LZ.SetDirty(zoneA, "b")
 		foo.LZ.Flush()
 		So(flushed, ShouldEqual, true)
 		So(flushedObject.(Foo).x, ShouldEqual, foo.x)
+		So(len(flushedTags), ShouldEqual, 2)
+
+		foo.LZ.SetDirty(zoneA)
+		flushedTags = []string{}
+		foo.LZ.Flush()
+		So(len(flushedTags), ShouldEqual, 0)
 	})
 }

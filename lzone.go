@@ -22,9 +22,14 @@ type LZArena struct {
 	ops []LZOps
 }
 
+type LZState struct {
+	state     int
+	dirtyTags map[string]bool
+}
+
 // Include this in the structure you want to support LazyZone.
 type LZoned struct {
-	LZStates []int
+	LZStates []LZState
 	LZArena  *LZArena
 	LZObj    interface{}
 }
@@ -32,7 +37,7 @@ type LZoned struct {
 // Operations for each zone for things like fetching and flushing
 // changes.
 type _LZFetch func(obj interface{})
-type _LZFlush func(obj interface{})
+type _LZFlush func(obj interface{}, tags []string)
 type LZOps struct {
 	Fetch _LZFetch
 	Flush _LZFlush
@@ -51,7 +56,7 @@ func (a *LZArena) AddZone(ops LZOps) int {
 // Initiatialize an instance
 func (lz *LZoned) Init(arena *LZArena, obj interface{}) {
 	for i := 0; i < len(arena.ops); i++ {
-		lz.LZStates = append(lz.LZStates, 0)
+		lz.LZStates = append(lz.LZStates, LZState{dirtyTags: map[string]bool{}})
 	}
 
 	lz.LZArena = arena
@@ -59,15 +64,21 @@ func (lz *LZoned) Init(arena *LZArena, obj interface{}) {
 }
 
 func (lz *LZoned) GetState(zone int) int {
-	return lz.LZStates[zone]
+	return lz.LZStates[zone].state
 }
 
-func (lz *LZoned) SetDirty(zone int) {
-	lz.LZStates[zone] = LZDirty
+func (lz *LZoned) SetDirty(zone int, keys ...string) {
+	zoneState := &lz.LZStates[zone]
+	zoneState.state = LZDirty
+
+	for _, key := range keys {
+		zoneState.dirtyTags[key] = true
+	}
 }
 
 func (lz *LZoned) SetClean(zone int) {
-	lz.LZStates[zone] = LZClean
+	lz.LZStates[zone].state = LZClean
+	lz.LZStates[zone].dirtyTags = map[string]bool{}
 }
 
 func (lz *LZoned) Fetch(zone int) {
@@ -79,10 +90,21 @@ func (lz *LZoned) Fetch(zone int) {
 	lz.SetDirty(zone)
 }
 
+func (lz *LZoned) GetTags(zone int) []string {
+	tagMap := lz.LZStates[zone].dirtyTags
+
+	tags := []string{}
+	for e, _ := range tagMap {
+		tags = append(tags, e)
+	}
+
+	return tags
+}
+
 func (lz *LZoned) _flush(zone int) {
 	if lz.GetState(zone) == LZDirty {
 		zoneOps := lz.LZArena.ops[zone]
-		zoneOps.Flush(lz.LZObj)
+		zoneOps.Flush(lz.LZObj, lz.GetTags(zone))
 	}
 
 	lz.SetClean(zone)
