@@ -40,7 +40,7 @@ For each `struct` **definition** (**i.e. not instance level, class level**), you
 var UserArena = NewLZArena()
 
 // Add our zones to the arena
-var UserSQLZone = UserArena.AddZone(ZoneOps{
+var UserSQLZone = UserArena.AddZone(LZops{
   Fetch: func (obj {}interface) {
     u := obj.(*User)
     SqlQueryToGetNameAndAge(u)
@@ -51,7 +51,7 @@ var UserSQLZone = UserArena.AddZone(ZoneOps{
   },
 })
 
-var UserRedisZone = UserArena.AddZone(ZoneOps{
+var UserRedisZone = UserArena.AddZone(LZops{
   Fetch: func (obj {}interface) {
     u := obj.(*User)
     RedisQueryToGetPeopleViewingMe()
