@@ -45,10 +45,19 @@ var UserSQLZone = UserArena.AddZone(LZops{
     u := obj.(*User)
     SqlQueryToGetNameAndAge(u)
   },
-  Flush: func (obj {}interface) {
+  Flush: func (obj {}interface, tags []string) {
 	u := obj.(*User)
-   SqlQueryToSaveNameAndAge(u)
-  },
+
+  StartSQLTransaction()
+  
+  for _, tag := range tags {
+   switch tag {
+     case 'name':
+       UpdateNameViaSQL(u)
+     case 'age':
+       UpdateAgeViaSQL(u)
+   }
+  }
 })
 
 var UserRedisZone = UserArena.AddZone(LZops{
@@ -56,7 +65,7 @@ var UserRedisZone = UserArena.AddZone(LZops{
     u := obj.(*User)
     RedisQueryToGetPeopleViewingMe()
   },
-  Flush: func (obj {}interface) {
+  Flush: func (obj {}interface, tags []string) {
 	u := obj.(*User)
 	Panic("unsupported")
   },
@@ -83,11 +92,12 @@ func (u *User) GetName() string {
 ```
 
 ##### Setters
-For your applicable setters on your model, you need to note that a zone has been dirtied.
+For your applicable setters on your model, you need to note that a zone has been dirtied. You can add 'tags' which
+will be available in your flush routine so you can update only the fields that have changed.
 
 ```go
 func (u *User) SetName(name string) string {
-  u.lz.SetDirty(UserSQLZone)
+  u.lz.SetDirty(UserSQLZone, "name")
   
   u.Name = name
 }
