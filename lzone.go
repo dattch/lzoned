@@ -37,10 +37,10 @@ type LZoned struct {
 // Operations for each zone for things like fetching and flushing
 // changes.
 type _LZFetch func(obj interface{})
-type _LZFlush func(obj interface{}, tags []string) error
+type _LZCommit func(obj interface{}, tags []string) error
 type LZOps struct {
-	Fetch _LZFetch
-	Flush _LZFlush
+	Fetch  _LZFetch
+	Commit _LZCommit
 }
 
 func NewLZArena() *LZArena {
@@ -103,7 +103,7 @@ func (lz *LZoned) GetTags(zone int) []string {
 func (lz *LZoned) _flush(zone int) error {
 	if lz.GetState(zone) == LZDirty {
 		zoneOps := lz.LZArena.ops[zone]
-		err := zoneOps.Flush(lz.LZObj, lz.GetTags(zone))
+		err := zoneOps.Commit(lz.LZObj, lz.GetTags(zone))
 		if err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func (lz *LZoned) _flush(zone int) error {
 	return nil
 }
 
-func (lz *LZoned) Flush() error {
+func (lz *LZoned) Commit() error {
 	for i := 0; i < len(lz.LZStates); i++ {
 		err := lz._flush(i)
 		if err != nil {

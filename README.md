@@ -1,10 +1,10 @@
-![LZoned: Fetch & flush semantics](./banner.png) 
+![LZoned: Fetch & commit semantics](./banner.png) 
 
 [![License](http://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://github.com/sotownsend/plumbus/blob/master/LICENSE)
 
 # What is this?
 
-This package provides a way to add fetch & flush (with *N* zones) semantics to your `struct` instances.
+This package provides a way to add fetch & commit (with *N* zones) semantics to your `struct` instances.
 
 
 ### Example scenerio
@@ -45,7 +45,7 @@ var UserSQLZone = UserArena.AddZone(LZops{
     u := obj.(*User)
     SqlQueryToGetNameAndAge(u)
   },
-  Flush: func (obj {}interface, tags []string) error {
+  Commit: func (obj {}interface, tags []string) error {
 	u := obj.(*User)
 
   StartSQLTransaction()
@@ -69,7 +69,7 @@ var UserRedisZone = UserArena.AddZone(LZops{
     u := obj.(*User)
     RedisQueryToGetPeopleViewingMe()
   },
-  Flush: func (obj {}interface, tags []string) {
+  Commit: func (obj {}interface, tags []string) {
 	u := obj.(*User)
 	Panic("unsupported")
   },
@@ -97,7 +97,7 @@ func (u *User) GetName() string {
 
 ##### Setters
 For your applicable setters on your model, you need to note that a zone has been dirtied. You can add 'tags' which
-will be available in your flush routine so you can update only the fields that have changed.
+will be available in your commit routine so you can update only the fields that have changed.
 
 ```go
 func (u *User) SetName(name string) string {
@@ -108,7 +108,7 @@ func (u *User) SetName(name string) string {
 ```
 
 ### Step 4 
-Now your ready to call `err := u.lz.Flush()` when you're ready to save all dirty changes. If any of the zones fails to flush (zone flush ops returns error), then this will return the first error and not complete the flush.
+Now your ready to call `err := u.lz.Commit()` when you're ready to save all dirty changes. If any of the zones fails to commit (zone commit ops returns error), then this will return the first error and not complete the commit.
 
 ## Communication
 > ♥ This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.

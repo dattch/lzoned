@@ -2,8 +2,9 @@ package lzoned
 
 import (
 	"fmt"
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestLZone(t *testing.T) {
@@ -31,7 +32,7 @@ func TestLZone(t *testing.T) {
 				fetched = true
 				fetchedObject = obj
 			},
-			Flush: func(obj interface{}, tags []string) error {
+			Commit: func(obj interface{}, tags []string) error {
 				flushed = true
 				flushedObject = obj
 				for _, tag := range tags {
@@ -75,18 +76,18 @@ func TestLZone(t *testing.T) {
 
 		// Doesn't flush if not dirty
 		foo.LZ.SetClean(zoneA)
-		foo.LZ.Flush()
+		foo.LZ.Commit()
 		So(flushed, ShouldEqual, false)
 
 		// Stays empty if flushed
 		foo.LZ.LZStates[zoneA].state = 0
-		foo.LZ.Flush()
+		foo.LZ.Commit()
 		So(foo.LZ.GetState(zoneA), ShouldEqual, 0)
 
 		// Does flush if dirty and can set keys
 		foo.LZ.SetDirty(zoneA, "a")
 		foo.LZ.SetDirty(zoneA, "b")
-		err := foo.LZ.Flush()
+		err := foo.LZ.Commit()
 		So(flushed, ShouldEqual, true)
 		So(flushedObject.(Foo).x, ShouldEqual, foo.x)
 		So(len(flushedTags), ShouldEqual, 2)
@@ -96,7 +97,7 @@ func TestLZone(t *testing.T) {
 		foo.LZ.SetDirty(zoneA)
 		flushedTags = []string{}
 		shouldError = true
-		err = foo.LZ.Flush()
+		err = foo.LZ.Commit()
 		So(len(flushedTags), ShouldEqual, 0)
 		So(err, ShouldNotEqual, nil)
 	})
