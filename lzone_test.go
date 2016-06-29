@@ -74,6 +74,11 @@ func TestLZone(t *testing.T) {
 		foo.LZ.Fetch(zoneA)
 		So(fetched, ShouldEqual, false)
 
+		// Does fetch again if set to clean
+		foo.LZ.SetEmpty(zoneA)
+		foo.LZ.Fetch(zoneA)
+		So(fetched, ShouldEqual, true)
+
 		// Doesn't flush if not dirty
 		foo.LZ.SetClean(zoneA)
 		foo.LZ.Commit()

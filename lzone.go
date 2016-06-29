@@ -81,6 +81,11 @@ func (lz *LZoned) SetClean(zone int) {
 	lz.LZStates[zone].dirtyTags = map[string]bool{}
 }
 
+func (lz *LZoned) SetEmpty(zone int) {
+	lz.LZStates[zone].state = LZEmpty
+	lz.LZStates[zone].dirtyTags = map[string]bool{}
+}
+
 func (lz *LZoned) Fetch(zone int) {
 	if lz.GetState(zone) == LZEmpty {
 		zoneOps := lz.LZArena.ops[zone]
